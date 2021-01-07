@@ -15,7 +15,7 @@ module.exports = {
   },
 
   getSchedules: (req, res, nxt) => { // Get all the stored schedules
-    return getSchedules()
+    return getSchedules(req.query)
       .then(data => {
         return res.json({
           data

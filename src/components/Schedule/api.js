@@ -1,4 +1,4 @@
-const { errorHandler, validateEmail, validateDate } = require('../../helpers')
+const { errorHandler, validateEmail, validateDate, hasOwnProperty } = require('../../helpers')
 const AppError = require('../Error')
 const DAO = require('./dao')
 const sendEmailViaMailer = require('./../Mail')
@@ -16,8 +16,35 @@ const apiObject = {
   },
 
   // Get all schedules
-  getSchedules: () => {
-    return DAO.getAllSchedules()
+  getSchedules: (filters = {}) => {
+    const filterObj = {
+      isActive: true
+    }
+    if (!!filters === true) {
+      if (hasOwnProperty(filters, 'type') && !!filters.type === true) {
+        switch (filters.type.toLowerCase()) {
+          case 'success':
+            filterObj.isProcessed = 2
+            filterObj.isSent = true
+            break
+          case 'fail':
+            filterObj.isProcessed = 2
+            filterObj.isSent = false
+            break
+
+          case 'pending':
+            filterObj.isProcessed = 0
+            filterObj.isSent = false
+            break
+
+          case 'delete':
+            filterObj.isActive = false
+            break
+        }
+      }
+    }
+
+    return DAO.getAllSchedules(filterObj)
       .then(data => {
         if (!!data === false) return []
         return data
