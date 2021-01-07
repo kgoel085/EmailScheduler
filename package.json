@@ -19,6 +19,7 @@
     "morgan": "^1.10.0",
     "mysql2": "^2.2.5",
     "node-cron": "^2.0.3",
+    "nodemailer": "^6.4.17",
     "trim-request": "^1.0.6",
     "uuid": "^8.3.2"
   },

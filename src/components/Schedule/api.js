@@ -1,6 +1,7 @@
 const { errorHandler, validateEmail, validateDate } = require('../../helpers')
 const AppError = require('../Error')
 const DAO = require('./dao')
+const sendEmailViaMailer = require('./../Mail')
 
 const apiObject = {
   // Create a schedule
@@ -26,7 +27,7 @@ const apiObject = {
 
   // Get unprocessed schedules
   getUnProcessedSchedules: () => {
-    return DAO.getAllSchedules({ isProcessed: 0, isActive: true })
+    return DAO.getAllSchedules({ isProcessed: 0, isActive: true, scheduledFor: { $lt: new Date().toISOString() } })
       .then(data => {
         if (!!data === false) return []
         return data
@@ -38,7 +39,7 @@ const apiObject = {
   processSchedules: () => {
     return apiObject.getUnProcessedSchedules()
       .then(data => apiObject.markScheduleProcessStatus(data))
-      .then(data => apiObject.processEmails(data))
+      .then(scheduleData => apiObject.processEmails(scheduleData))
       .catch(errorHandler)
   },
 
@@ -50,16 +51,25 @@ const apiObject = {
   // Send Email
   sendEmail: (schedule = null) => {
     if (!!schedule === false) return null
+
+    const { to, body, _id: scheduleId } = schedule
+    return sendEmailViaMailer(to, body)
+      .then(info => DAO.updateById(scheduleId, { isProcessed: 2, isSent: true, sentAt: new Date().toISOString() }))
+      .catch(async err => {
+        await DAO.updateById(scheduleId, { isProcessed: 2, isSent: false, errorInfo: err.message })
+        errorHandler(err)
+      })
   },
 
   // Mark schedules as processing, so that they does not come with next iteration
   markScheduleProcessStatus: async (schedules = [], status = 1) => {
     const returnVal = []
     if (!!schedules === true && schedules.length > 0) {
-      schedules.forEach(async schedule => {
+      for (let i = 0; i < schedules.length; i++) {
+        const schedule = schedules[i]
         const updatedData = await DAO.updateById(schedule._id, { isProcessed: status })
-        if (!!updatedData === true) returnVal.push(returnVal)
-      })
+        if (!!updatedData === true) returnVal.push(updatedData)
+      }
     }
 
     return returnVal
