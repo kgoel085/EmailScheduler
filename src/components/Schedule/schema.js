@@ -4,11 +4,11 @@ const { validateEmail } = require('../../helpers')
 const errEmailMsg = 'Please provide a valid email'
 
 const schemaFields = {
-  // from: { // Sender of email
-  //   type: String,
-  //   required: true,
-  //   validate: [validateEmail, errEmailMsg]
-  // },
+  from: { // Sender of email
+    type: String,
+    required: true,
+    validate: [validateEmail, errEmailMsg]
+  },
   to: { // Recipient of email
     type: String,
     required: true,

@@ -79,8 +79,8 @@ const apiObject = {
   sendEmail: (schedule = null) => {
     if (!!schedule === false) return null
 
-    const { to, body, _id: scheduleId } = schedule
-    return sendEmailViaMailer(to, body)
+    const { from, to, body, _id: scheduleId } = schedule
+    return sendEmailViaMailer(from, to, body)
       .then(info => DAO.updateById(scheduleId, { isProcessed: 2, isSent: true, sentAt: new Date().toISOString() }))
       .catch(async err => {
         await DAO.updateById(scheduleId, { isProcessed: 2, isSent: false, errorInfo: err.message })
@@ -133,7 +133,7 @@ const apiObject = {
   validateScheduleBody: (scheduleBody = {}, callFrom = 'create') => {
     if (!!scheduleBody === false || Object.keys(scheduleBody).length === 0) throw new AppError('Please provide some input to create schedule !', 422)
 
-    let { to, body, schedule, id } = scheduleBody
+    let { to, from, body, schedule, id } = scheduleBody
     let scheduleDate
 
     const bodyErrMsg = 'Please provide some input for email to send !'
@@ -143,7 +143,7 @@ const apiObject = {
 
         // Validate Email
         if (!!to === true && validateEmail(to) === false) to = null
-        // if (!!from === true && validateEmail(from) === false) from = null
+        if (!!from === true && validateEmail(from) === false) from = null
 
         if (!!schedule === true) {
           scheduleDate = validateDate(schedule, 'Schedule date')
@@ -157,7 +157,7 @@ const apiObject = {
 
         // Validate Email
         validateEmail(to, true)
-        // validateEmail(from, true)
+        validateEmail(from, true)
 
         // Validate Date
         scheduleDate = validateDate(schedule, 'Schedule date', true)
@@ -175,7 +175,7 @@ const apiObject = {
     // Prepare Object
     const returnObj = {}
     if (!!to === true) returnObj.to = to
-    // if (!!from === true) returnObj.from = from
+    if (!!from === true) returnObj.from = from
     if (!!body === true) returnObj.body = body
     if (!!scheduleDate === true) returnObj.scheduledFor = scheduleDate
 
